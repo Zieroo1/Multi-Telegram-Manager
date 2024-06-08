@@ -1,0 +1,6 @@
+/tdatas/*
+Telegram.exe
+/tg/*
+/.venv/*
+/.idea/*
+!/tdatas/*.txt
