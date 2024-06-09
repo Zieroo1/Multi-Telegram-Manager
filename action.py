@@ -1,0 +1,146 @@
+import os
+import shutil
+import subprocess
+import time
+import tkinter as tk
+
+import pyautogui
+from PyQt5.QtCore import QSize, Qt
+
+from image_list_item import image_list_item
+
+
+class view_model:
+    def __init__ (self, directory):
+        self.profile_dir = directory
+        self.profiles = self.get_profile_list(directory)
+        self.profile_items = self.create_profile_item()
+    def get_profile_list(self, directory):
+        # Проверяем, что указанная директория существует
+        if not os.path.exists(directory):
+            print(f"Directory '{directory}' does not exist.")
+            return []
+
+        # Получаем список всех элементов в директории
+        items = os.listdir(directory)
+
+        # Фильтруем только папки
+        folders = [os.path.join(directory, item) for item in items if os.path.isdir(os.path.join(directory, item))]
+
+        return folders
+
+    def create_profile_item(self):
+        profile_items = []
+        for i, profile_name in enumerate(self.profiles, start=1):
+            unchecked_icon_path = os.path.join('gui_img', 'tguncli.png')
+            checked_icon_path = os.path.join('gui_img', 'tgcli.png')
+            icon_size = QSize(38, 38)
+            item = image_list_item(unchecked_icon_path, checked_icon_path, f"Profile {i}", icon_size, profile_name)
+            item.setData(Qt.UserRole, profile_name)
+            item.setSizeHint(QSize(180, 43))
+            item.setTextAlignment(Qt.AlignCenter)
+            profile_items.append(item)
+
+        return profile_items
+
+    def on_item_clicked(self, item):
+        item.setChecked(not item.icon().cacheKey() == item.checked_icon.cacheKey())
+
+    def select_all_action(self):
+        for i in self.profile_items:
+            i.setChecked(True)
+
+    def unselect_all_action(self):
+        for i in self.profile_items:
+            i.setChecked(False)
+
+    def launch(self):
+        for tdata_path in self.get_checked():
+            self.create_inst(tdata_path.item.profile)
+            self.launch_telegram_with_tdata(tdata_path.item.profile)
+        time.sleep(5)
+        self.position_windows(len(self.get_checked()))
+
+    def get_checked(self):
+        checked = []
+        for i in self.profile_items:
+            if i.item.select:
+                checked.append(i)
+        return checked
+
+    def create_inst(self, inst):
+        number = inst.split('_')[1]
+        inst_new = 'tg\\' + number
+        source_file = 'Telegram.exe'
+
+        # Проверяем, существует ли исходный файл
+        if not os.path.isfile(source_file):
+            print(f"Нет телеги")
+            return
+
+        # Проверяем, существует ли папка назначения, иначе создаем её
+        if not os.path.exists(inst_new):
+            os.makedirs(inst_new)
+
+        # Получаем только имя файла из полного пути источника
+        file_name = os.path.basename(source_file)
+
+        # Путь для копии файла в папке назначения
+        destination_file = os.path.join(inst_new, file_name)
+
+        try:
+            # Копируем файл
+            shutil.copy2(source_file, destination_file)
+            print(f"Файл успешно скопирован в {destination_file}")
+        except Exception as e:
+            print(f"Ошибка при копировании файла: {e}")
+
+        self.copy_tdata(inst, inst_new)
+
+    def copy_tdata(self, tdata, inst):
+
+        # Проверяем, существует ли исходный файл
+        if not os.path.isdir(tdata):
+            print(f"Нет профиля")
+            return
+
+        try:
+            # Создаем путь для новой папки
+            new_folder_path = os.path.join(inst, 'tdata')
+
+            # Копируем папку со всем её содержимым рекурсивно
+            shutil.copytree(tdata, new_folder_path)
+            print(f"Папка '{tdata}' успешно скопирована в '{new_folder_path}'.")
+        except Exception as e:
+            print(f"Ошибка при копировании папки: {e}")
+
+    def launch_telegram_with_tdata(self, inst):
+        number = inst.split('_')[1]
+        inst_new = 'tg\\' + number
+        telegram_path = f'{inst_new}\\Telegram.exe'
+        command = f"{telegram_path}"
+        subprocess.Popen(command, shell=True)
+        time.sleep(3)
+
+    def get_screen_resolution(self):
+        root = tk.Tk()
+        root.withdraw()
+        return root.winfo_screenwidth(), root.winfo_screenheight()
+
+    def position_windows(self, num_windows):
+        screen_width, screen_height = self.get_screen_resolution()
+        cols = int(num_windows ** 0.5)
+        rows = int(num_windows / cols) + (num_windows % cols > 0)
+        window_width = screen_width // cols
+        window_height = screen_height // rows
+
+        telegram_windows = pyautogui.getWindowsWithTitle("Telegram")
+        num_telegram_windows = len(telegram_windows)
+
+        for i in range(min(num_telegram_windows, num_windows)):
+            col = i % cols
+            row = i // cols
+            x = col * window_width
+            y = row * window_height
+            telegram_windows[i].moveTo(x, y)
+            telegram_windows[i].resizeTo(window_width, window_height)
