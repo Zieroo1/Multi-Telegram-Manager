@@ -89,7 +89,7 @@ class MyApp(QWidget):
         buttons_dragdrop_layout = QVBoxLayout()
 
         self.start_button = QPushButton('Start')
-        self.start_button.clicked.connect(self.view_model.launch)
+        self.start_button.clicked.connect(self.async_launch)
         self.stop_button = QPushButton('Kill all TG\'s')
         self.stop_button.clicked.connect(self.view_model.stop)
         self.delete_button = QPushButton('Delete')
@@ -146,3 +146,6 @@ class MyApp(QWidget):
         self.profile_list.clear()
         for i in self.view_model.profile_items:
             self.profile_list.addItem(i)
+
+    def async_launch(self):
+        self.view_model.start_worker(self.view_model.launch)

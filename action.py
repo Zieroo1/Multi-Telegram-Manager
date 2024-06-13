@@ -10,6 +10,7 @@ import pyautogui
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtWidgets import QWidget
 from image_list_item import image_list_item
+from worker import worker
 
 
 class view_model(QWidget):
@@ -21,6 +22,7 @@ class view_model(QWidget):
         self.profile_items = []
         self.update()
         self.scale = False
+        self.worker = None
 
     def get_profile_list(self, directory):
         # Проверяем, что указанная директория существует
@@ -68,6 +70,15 @@ class view_model(QWidget):
         time.sleep(5)
         if len(self.get_checked()) > 0 and self.scale:
             self.position_windows(len(self.get_checked()))
+
+    def start_worker(self, function, *args, **kwargs):
+        self.worker = worker(function, *args, **kwargs)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.worker.result.connect(self.handle_result)
+        self.worker.start()
+
+    def handle_result(self, result):
+        pass
 
     def get_checked(self):
         checked = []
