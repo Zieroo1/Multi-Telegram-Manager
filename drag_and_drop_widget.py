@@ -1,64 +1,71 @@
 import os
 import shutil
 
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout
+from PyQt5.QtCore import Qt, pyqtSignal
+from style import drag_and_drop_style
 
 
 class drag_and_drop_widget(QWidget):
+    files_added = pyqtSignal()
     def __init__(self, parent=None):
         super().__init__(parent)
+
         self.setAcceptDrops(True)
         self.initUI()
 
     def initUI(self):
-        self.label = QLabel("Перетащите файлы сюда", self)
+        self.label = QLabel("Drop your tdata's here", self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.setStyleSheet("""
-            QLabel {
-                color: #FFFFFF;
-                font-size: 18px;
-                font-family: Poppins;
-            }
-        """)
+        self.label.setStyleSheet(drag_and_drop_style)
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.label)
         layout.addStretch()
 
-        self.setStyleSheet("""
-            DragDropWidget {
-                background-color: #383838;
-                border: 2px solid #2D2D2D;
-                border-radius: 10px;
-            }
-        """)
+        self.setLayout(layout)  # Устанавливаем макет для виджета
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
+            print("dragEnterEvent: URLs detected")
+        else:
+            print("dragEnterEvent: No URLs detected")
 
     def dropEvent(self, event):
         urls = event.mimeData().urls()
+        print(f"dropEvent: {len(urls)} items detected")
         tdatas_folder = 'tdatas'
         if not os.path.exists(tdatas_folder):
             os.makedirs(tdatas_folder)
+            print(f"Создана папка: {tdatas_folder}")
 
         for url in urls:
             file_path = url.toLocalFile()
-            if os.path.isfile(file_path):
-                base_name, ext = os.path.splitext(os.path.basename(file_path))
-                new_file_name = self.get_new_filename(os.path.join(tdatas_folder, base_name), ext)
-                new_file_path = os.path.join(tdatas_folder, new_file_name)
-                shutil.copy(file_path, new_file_path)
+            print(f"Обработка пути: {file_path}")
+            if os.path.isdir(file_path) and os.path.basename(file_path) == 'tdata':
+                self.copy_directory(file_path, tdatas_folder)
+            else:
+                print(f"Игнорируется: {file_path} (не папка или не 'tdata')")
 
-        self.label.setText("Файлы успешно добавлены")
+        self.label.setText("Successfully added")
+        self.files_added.emit()
 
     def dragLeaveEvent(self, event):
         event.accept()
+        print("dragLeaveEvent")
 
-    def get_new_filename(self, base_path, ext):
+    def copy_directory(self, dir_path, tdatas_folder):
+        base_name = os.path.basename(dir_path)
+        new_dir_name = self.get_new_dirname(os.path.join(tdatas_folder, base_name))
+        new_dir_path = os.path.join(tdatas_folder, new_dir_name)
+        shutil.copytree(dir_path, new_dir_path)
+        print(f"Скопирована папка: {dir_path} в {new_dir_path}")
+
+    def get_new_dirname(self, base_path):
         i = 0
-        while os.path.exists(f"{base_path}_{i}{ext}"):
+        while os.path.exists(f"{base_path}_{i}"):
             i += 1
-        return f"{os.path.basename(base_path)}_{i}{ext}"
+        new_dir_name = f"{os.path.basename(base_path)}_{i}"
+        print(f"Новое имя папки: {new_dir_name}")
+        return new_dir_name

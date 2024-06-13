@@ -1,20 +1,27 @@
+import fnmatch
 import os
 import shutil
 import subprocess
 import time
 import tkinter as tk
-
+import psutil
 import pyautogui
-from PyQt5.QtCore import QSize, Qt
 
+from PyQt5.QtCore import QSize, Qt, pyqtSignal
+from PyQt5.QtWidgets import QWidget
 from image_list_item import image_list_item
 
 
-class view_model:
+class view_model(QWidget):
+    data_changed = pyqtSignal()
     def __init__ (self, directory):
+        super().__init__(None)
         self.profile_dir = directory
-        self.profiles = self.get_profile_list(directory)
-        self.profile_items = self.create_profile_item()
+        self.profiles = []
+        self.profile_items = []
+        self.update()
+        self.scale = False
+
     def get_profile_list(self, directory):
         # Проверяем, что указанная директория существует
         if not os.path.exists(directory):
@@ -35,7 +42,7 @@ class view_model:
             unchecked_icon_path = os.path.join('gui_img', 'tguncli.png')
             checked_icon_path = os.path.join('gui_img', 'tgcli.png')
             icon_size = QSize(38, 38)
-            item = image_list_item(unchecked_icon_path, checked_icon_path, f"Profile {i}", icon_size, profile_name)
+            item = image_list_item(unchecked_icon_path, checked_icon_path, icon_size, profile_name)
             item.setData(Qt.UserRole, profile_name)
             item.setSizeHint(QSize(180, 43))
             item.setTextAlignment(Qt.AlignCenter)
@@ -59,7 +66,8 @@ class view_model:
             self.create_inst(tdata_path.item.profile)
             self.launch_telegram_with_tdata(tdata_path.item.profile)
         time.sleep(5)
-        self.position_windows(len(self.get_checked()))
+        if len(self.get_checked()) > 0 and self.scale:
+            self.position_windows(len(self.get_checked()))
 
     def get_checked(self):
         checked = []
@@ -144,3 +152,42 @@ class view_model:
             y = row * window_height
             telegram_windows[i].moveTo(x, y)
             telegram_windows[i].resizeTo(window_width, window_height)
+
+    def update(self):
+        self.profiles = self.get_profile_list(self.profile_dir)
+        self.profile_items = self.create_profile_item()
+        self.data_changed.emit()
+
+    def delete_profile(self):
+        for profile in self.get_checked():
+            try:
+                if os.path.exists(profile.item.inst):
+                    shutil.rmtree(profile.item.inst)
+                    print(f"Inst '{profile.item.name}' успешно удален.")
+                if os.path.exists(profile.item.profile):
+                    shutil.rmtree(profile.item.profile)
+                    print(f"Профиль '{profile.item.name}' успешно удален.")
+            except Exception as e:
+                print(f"Ошибка при удалении профиля: {e}")
+
+        self.update()
+
+    def stop(self):
+        base_path = os.getcwd()
+        process_name = 'Telegram.exe'
+        path_pattern = os.path.normcase(os.path.join(base_path, 'tg', '*', process_name))
+
+        for proc in psutil.process_iter(['pid', 'name', 'exe']):
+            try:
+                # Проверяем, совпадает ли имя процесса и путь
+                if proc.info['name'] == process_name and fnmatch.fnmatch(os.path.normcase(proc.info['exe']), path_pattern):
+                    # Завершаем процесс
+                    proc.kill()
+                    print(f"Процесс {process_name} с PID {proc.info['pid']} был убит")
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
+                # Игнорируем ошибки, если процесс уже не существует или недоступен
+                print(f"Не удалось убить процесс {process_name}: {e}")
+
+    def switch_scale(self):
+        self.scale = not self.scale
+

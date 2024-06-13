@@ -1,14 +1,9 @@
-import os
-import subprocess
-import sys
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget,
-                             QLabel, QFrame)
-from PyQt5.QtCore import Qt, QSize, QPoint
-
-
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget,
+                             QLabel, QFrame, QCheckBox)
+from PyQt5.QtCore import Qt, QPoint
 from drag_and_drop_widget import drag_and_drop_widget
-from image_list_item import image_list_item
 from action import view_model
+from style import title_label_style, profile_list_style, button_style_style, button_close_style, button_main_style, checkbox_style
 
 
 class MyApp(QWidget):
@@ -40,15 +35,7 @@ class MyApp(QWidget):
 
         # Title text
         self.title_label = QLabel("TG Starter")
-        self.title_label.setStyleSheet("""
-                   QLabel {
-                       color: #FFFFFF;
-                       font-size: 16px;
-                       font-family: Poppins;
-                       font-size: 20px;
-                       font-weight: bold;
-                   }
-               """)
+        self.title_label.setStyleSheet(title_label_style)
         self.title_label.setAlignment(Qt.AlignCenter)
 
         header_layout.addWidget(self.title_bar)
@@ -60,17 +47,17 @@ class MyApp(QWidget):
         self.minimize_button = QPushButton('--')
         self.minimize_button.setFixedSize(30, 30)
         self.minimize_button.clicked.connect(self.showMinimized)
-        self.minimize_button.setStyleSheet(self.button_style("#383838"))
+        self.minimize_button.setStyleSheet(button_main_style("#383838"))
 
         self.fullscreen_button = QPushButton('[  ]')
         self.fullscreen_button.setFixedSize(30, 30)
         self.fullscreen_button.clicked.connect(self.toggle_fullscreen)
-        self.fullscreen_button.setStyleSheet(self.button_style("#383838"))
+        self.fullscreen_button.setStyleSheet(button_main_style("#383838"))
 
         self.close_button = QPushButton('X')
         self.close_button.setFixedSize(30, 30)
         self.close_button.clicked.connect(self.close)
-        self.close_button.setStyleSheet(self.button_style_close("#383838"))
+        self.close_button.setStyleSheet(button_close_style("#383838"))
 
         header_layout.addWidget(self.minimize_button)
         header_layout.addWidget(self.fullscreen_button)
@@ -90,37 +77,10 @@ class MyApp(QWidget):
         self.profile_list.setSelectionMode(QListWidget.MultiSelection)
 
         self.view_model = view_model('tdatas')
+        self.view_model.data_changed.connect(self.update)
+        self.update()
 
-        for i in self.view_model.profile_items:
-            self.profile_list.addItem(i)
-
-        self.profile_list.setStyleSheet("""
-            QListWidget {
-                background-color: #383838;
-                border: 2px solid #2D2D2D;
-            }
-            QListWidget::item {
-                color: #FFFFFF;
-                background-color: #484848;
-                padding: 5px;
-                border: 1px solid #2D2D2D;
-                width: 180px;
-                height: 43px;
-                border-radius: 10px;
-                font-size: 20px;
-                font-family: Poppins;
-                font-weight: medium;
-            }
-            QListWidget::item:selected {
-                background-color: #717171;
-            }
-            QListWidget::item:selected:!active {
-                background-color: #484848;
-            }
-            QListWidget::item:selected:active {
-                background-color: #717171;
-            }
-        """)
+        self.profile_list.setStyleSheet(profile_list_style)
 
         self.profile_list.itemClicked.connect(self.view_model.on_item_clicked)
 
@@ -130,82 +90,39 @@ class MyApp(QWidget):
 
         self.start_button = QPushButton('Start')
         self.start_button.clicked.connect(self.view_model.launch)
-        self.stop_button = QPushButton('Stop')
+        self.stop_button = QPushButton('Kill all TG\'s')
+        self.stop_button.clicked.connect(self.view_model.stop)
         self.delete_button = QPushButton('Delete')
+        self.delete_button.clicked.connect(self.view_model.delete_profile)
         self.select_all_button = QPushButton('Select All')
         self.select_all_button.clicked.connect(self.view_model.select_all_action)
         self.unselect_all_button = QPushButton('Unselect All')
         self.unselect_all_button.clicked.connect(self.view_model.unselect_all_action)
+        self.scale = QCheckBox('Scale TG\'s')
+        self.scale.clicked.connect(self.view_model.switch_scale)
+        self.scale.setStyleSheet(checkbox_style)
 
-        button_style = """
-            QPushButton {
-                background-color: #383838;
-                color: white;
-                border-radius: 10px;
-                font-size: 28px;
-                font-family: Poppins;
-                font-weight: medium;
-                padding: 10px;
-                min-width: 245px;
-                min-height: 59px;
-                border: 2px solid #2D2D2D;
-            }
-            QPushButton:hover {
-                background-color: #717171;
-            }
-        """
-        self.start_button.setStyleSheet(button_style)
-        self.stop_button.setStyleSheet(button_style)
-        self.delete_button.setStyleSheet(button_style)
-        self.select_all_button.setStyleSheet(button_style)
-        self.unselect_all_button.setStyleSheet(button_style)
+        self.start_button.setStyleSheet(button_style_style)
+        self.stop_button.setStyleSheet(button_style_style)
+        self.delete_button.setStyleSheet(button_style_style)
+        self.select_all_button.setStyleSheet(button_style_style)
+        self.unselect_all_button.setStyleSheet(button_style_style)
 
         buttons_dragdrop_layout.addWidget(self.start_button)
         buttons_dragdrop_layout.addWidget(self.stop_button)
         buttons_dragdrop_layout.addWidget(self.delete_button)
         buttons_dragdrop_layout.addWidget(self.select_all_button)
         buttons_dragdrop_layout.addWidget(self.unselect_all_button)
+        buttons_dragdrop_layout.addWidget(self.scale)
 
         self.drag_drop_widget = drag_and_drop_widget()
         buttons_dragdrop_layout.addWidget(self.drag_drop_widget)
+        self.drag_drop_widget.files_added.connect(self.view_model.update)
 
         content_layout.addLayout(buttons_dragdrop_layout)
 
         main_layout.addLayout(content_layout)
         self.setLayout(main_layout)
-
-    def button_style(self, bg_color):
-        return f"""
-            QPushButton {{
-                background-color: {bg_color};
-                color: white;
-                border: 1px solid #2D2D2D;
-                font-family: Poppins;
-                font-weight: bold;
-                border-radius: 10px;
-                min-width: 47px;
-                min-height: 30px;
-            }}
-            QPushButton:hover {{
-                background-color: #717171;
-            }}
-        """
-    def button_style_close(self, bg_color):
-        return f"""
-            QPushButton {{
-                background-color: #661717;
-                color: white;
-                border: 1px solid #2D2D2D;
-                font-family: Poppins;
-                font-weight: bold;
-                border-radius: 10px;
-                min-width: 47px;
-                min-height: 30px;
-            }}
-            QPushButton:hover {{
-                background-color: #A92525;
-            }}
-        """
 
     def toggle_fullscreen(self):
         if self.isFullScreen():
@@ -224,3 +141,8 @@ class MyApp(QWidget):
 
     def mouseReleaseEvent(self, event):
         self.isPressed = False
+
+    def update(self):
+        self.profile_list.clear()
+        for i in self.view_model.profile_items:
+            self.profile_list.addItem(i)
