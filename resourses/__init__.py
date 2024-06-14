@@ -1,7 +1,5 @@
-from .gui_img import *
-from PyQt5.QtGui import QPixmap
-
-icon = QPixmap('icon/icon25.png')
+from .icon import icon
+from .gui_img import tgcli
 
 title_label_style = """
                    QLabel {

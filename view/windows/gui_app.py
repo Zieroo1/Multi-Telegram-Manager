@@ -1,12 +1,12 @@
-import base64
-
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget,
                              QLabel, QFrame, QCheckBox, QTextEdit)
 from PyQt5.QtCore import Qt, QPoint
-from view.widget.drag_and_drop_widget import drag_and_drop_widget
+
+from resourses.icon import icon
 from view_model.action import view_model
-from resourses import profile_list_style, button_style_style, button_close_style, button_main_style, \
-    checkbox_style, log_style, icon
+from resourses import (profile_list_style, button_style_style, button_close_style, button_main_style,
+                       checkbox_style, log_style)
+from view.widgets.drag_and_drop_widget import drag_and_drop_widget
 
 
 class MyApp(QWidget):
@@ -37,7 +37,7 @@ class MyApp(QWidget):
         title_layout.addStretch()
 
         # HTML-разметка с изображением перед текстом
-        html_text = f'<div style = "padding: 5px"><a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley"><img src="data:image/png;base64,{icon}" style="height: 50px; width: auto; vertical-align:middle;"></a> <span style="font-size: 18px; color: #FFFFFF; font-family: Poppins; vertical-align:middle;">Multi-Telegram Manager</span></div>'
+        html_text = f'<div style = "padding: 5px"><a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley"><img src="data:image/png;base64,{icon.get_icon()}" style="height: 50px; width: auto; vertical-align:middle;"></a> <span style="font-size: 18px; color: #FFFFFF; font-family: Poppins; vertical-align:middle;">Multi-Telegram Manager</span></div>'
 
         # Создаем QLabel с HTML-разметкой
         self.title_label = QLabel()

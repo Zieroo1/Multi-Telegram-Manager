@@ -9,7 +9,7 @@ import pyautogui
 
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtWidgets import QWidget
-from view.widget.image_list_item import image_list_item
+from view.widgets.image_list_item import image_list_item
 from model.worker import worker
 
 
