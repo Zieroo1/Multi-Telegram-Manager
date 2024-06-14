@@ -2,10 +2,9 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLi
                              QLabel, QFrame, QCheckBox, QTextEdit)
 from PyQt5.QtCore import Qt, QPoint
 
-from resourses.icon import icon
 from view_model.action import view_model
-from resourses import (profile_list_style, button_style_style, button_close_style, button_main_style,
-                       checkbox_style, log_style, title_label_style)
+from resourses import (profile_list_style, button_style, checkbox_style, log_style, title_label_style,
+                       get_resource, font_weight)
 from view.widgets.drag_and_drop_widget import drag_and_drop_widget
 
 
@@ -37,7 +36,7 @@ class MyApp(QWidget):
         title_layout.addStretch()
 
         # HTML-разметка с изображением перед текстом
-        html_text = f'<div style = "padding: 5px"><a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley"><img src="{icon.get_icon()}" style="height: 50px; width: auto; vertical-align:middle;"></a> <span style="font-size: 18px; color: #FFFFFF; font-family: Poppins; vertical-align:middle;">Multi-Telegram Manager</span></div>'
+        html_text = f'<div style = "padding: 5px"><a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley"><img src="{get_resource('icon/icon25.png')}" style="height: 50px; width: auto; vertical-align:middle;"></a> <span style="font-size: 18px; color: #FFFFFF; font-family: Poppins; vertical-align:middle;">Multi-Telegram Manager</span></div>'
 
         # Создаем QLabel с HTML-разметкой
         self.title_label = QLabel()
@@ -66,17 +65,17 @@ class MyApp(QWidget):
         self.minimize_button = QPushButton('--')
         self.minimize_button.setFixedSize(30, 30)
         self.minimize_button.clicked.connect(self.showMinimized)
-        self.minimize_button.setStyleSheet(button_main_style("#383838"))
+        self.minimize_button.setStyleSheet(button_style("#383838", "#717171", font_weight.BOLD))
 
         self.fullscreen_button = QPushButton('[  ]')
         self.fullscreen_button.setFixedSize(30, 30)
         self.fullscreen_button.clicked.connect(self.toggle_fullscreen)
-        self.fullscreen_button.setStyleSheet(button_main_style("#383838"))
+        self.fullscreen_button.setStyleSheet(button_style("#383838", "#717171", font_weight.BOLD))
 
         self.close_button = QPushButton('X')
         self.close_button.setFixedSize(30, 30)
         self.close_button.clicked.connect(self.close)
-        self.close_button.setStyleSheet(button_close_style("#383838"))
+        self.close_button.setStyleSheet(button_style("#383838", "#661717", font_weight.BOLD))
 
         header_layout.addWidget(self.minimize_button)
         header_layout.addWidget(self.fullscreen_button)
@@ -121,11 +120,11 @@ class MyApp(QWidget):
         self.scale.clicked.connect(self.view_model.switch_scale)
         self.scale.setStyleSheet(checkbox_style)
 
-        self.start_button.setStyleSheet(button_style_style)
-        self.stop_button.setStyleSheet(button_style_style)
-        self.delete_button.setStyleSheet(button_style_style)
-        self.select_all_button.setStyleSheet(button_style_style)
-        self.unselect_all_button.setStyleSheet(button_style_style)
+        self.start_button.setStyleSheet(button_style("#383838", "#717171", font_weight.MEDIUM, 28, 10))
+        self.stop_button.setStyleSheet(button_style("#383838", "#717171", font_weight.MEDIUM, 28, 10))
+        self.delete_button.setStyleSheet(button_style("#383838", "#717171", font_weight.MEDIUM, 28, 10))
+        self.select_all_button.setStyleSheet(button_style("#383838", "#717171", font_weight.MEDIUM, 28, 10))
+        self.unselect_all_button.setStyleSheet(button_style("#383838", "#717171", font_weight.MEDIUM, 28, 10))
 
         buttons_dragdrop_layout.addWidget(self.start_button)
         buttons_dragdrop_layout.addWidget(self.stop_button)
