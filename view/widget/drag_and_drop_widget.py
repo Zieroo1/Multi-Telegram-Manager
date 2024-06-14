@@ -3,14 +3,15 @@ import shutil
 
 from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout
 from PyQt5.QtCore import Qt, pyqtSignal
-from style import drag_and_drop_style
+from resourses import drag_and_drop_style
+from model.worker import worker
 
 
 class drag_and_drop_widget(QWidget):
     files_added = pyqtSignal()
     def __init__(self, parent=None):
         super().__init__(parent)
-
+        self.worker = None
         self.setAcceptDrops(True)
         self.initUI()
 
@@ -33,23 +34,9 @@ class drag_and_drop_widget(QWidget):
             print("dragEnterEvent: No URLs detected")
 
     def dropEvent(self, event):
-        urls = event.mimeData().urls()
-        print(f"dropEvent: {len(urls)} items detected")
-        tdatas_folder = 'tdatas'
-        if not os.path.exists(tdatas_folder):
-            os.makedirs(tdatas_folder)
-            print(f"Создана папка: {tdatas_folder}")
-
-        for url in urls:
-            file_path = url.toLocalFile()
-            print(f"Обработка пути: {file_path}")
-            if os.path.isdir(file_path) and os.path.basename(file_path) == 'tdata':
-                self.copy_directory(file_path, tdatas_folder)
-            else:
-                print(f"Игнорируется: {file_path} (не папка или не 'tdata')")
-
-        self.label.setText("Successfully added")
-        self.files_added.emit()
+        self.worker = worker(self.copy_profile,event.mimeData().urls())
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.worker.start()
 
     def dragLeaveEvent(self, event):
         event.accept()
@@ -69,3 +56,20 @@ class drag_and_drop_widget(QWidget):
         new_dir_name = f"{os.path.basename(base_path)}_{i}"
         print(f"Новое имя папки: {new_dir_name}")
         return new_dir_name
+
+    def copy_profile(self, urls):
+        print(f"dropEvent: {len(urls)} items detected")
+        tdatas_folder = 'tdatas'
+        if not os.path.exists(tdatas_folder):
+            os.makedirs(tdatas_folder)
+            print(f"Создана папка: {tdatas_folder}")
+
+        for url in urls:
+            file_path = url.toLocalFile()
+            print(f"Обработка пути: {file_path}")
+            if os.path.isdir(file_path) and os.path.basename(file_path) == 'tdata':
+                self.copy_directory(file_path, tdatas_folder)
+            else:
+                print(f"Игнорируется: {file_path} (не папка или не 'tdata')")
+
+        self.files_added.emit()

@@ -9,12 +9,13 @@ import pyautogui
 
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtWidgets import QWidget
-from image_list_item import image_list_item
-from worker import worker
+from view.widget.image_list_item import image_list_item
+from model.worker import worker
 
 
 class view_model(QWidget):
     data_changed = pyqtSignal()
+    log_signal = pyqtSignal(str)
     def __init__ (self, directory):
         super().__init__(None)
         self.profile_dir = directory
@@ -23,6 +24,7 @@ class view_model(QWidget):
         self.update()
         self.scale = False
         self.worker = None
+        self.log_output = ''
 
     def get_profile_list(self, directory):
         # Проверяем, что указанная директория существует
@@ -41,8 +43,8 @@ class view_model(QWidget):
     def create_profile_item(self):
         profile_items = []
         for i, profile_name in enumerate(self.profiles, start=1):
-            unchecked_icon_path = os.path.join('gui_img', 'tguncli.png')
-            checked_icon_path = os.path.join('gui_img', 'tgcli.png')
+            unchecked_icon_path = os.path.join('../resourses/gui_img', 'tguncli.png')
+            checked_icon_path = os.path.join('../resourses/gui_img', 'tgcli.png')
             icon_size = QSize(38, 38)
             item = image_list_item(unchecked_icon_path, checked_icon_path, icon_size, profile_name)
             item.setData(Qt.UserRole, profile_name)
@@ -90,7 +92,7 @@ class view_model(QWidget):
     def create_inst(self, inst):
         number = inst.split('_')[1]
         inst_new = 'tg\\' + number
-        source_file = 'Telegram.exe'
+        source_file = '../Telegram.exe'
 
         # Проверяем, существует ли исходный файл
         if not os.path.isfile(source_file):
@@ -110,6 +112,7 @@ class view_model(QWidget):
         try:
             # Копируем файл
             shutil.copy2(source_file, destination_file)
+            self.log_signal.emit(f'Файл успешно скопирован в {destination_file}')
             print(f"Файл успешно скопирован в {destination_file}")
         except Exception as e:
             print(f"Ошибка при копировании файла: {e}")
@@ -129,6 +132,7 @@ class view_model(QWidget):
 
             # Копируем папку со всем её содержимым рекурсивно
             shutil.copytree(tdata, new_folder_path)
+            self.log_signal.emit(f"Профиль '{new_folder_path}' успешно создан.")
             print(f"Папка '{tdata}' успешно скопирована в '{new_folder_path}'.")
         except Exception as e:
             print(f"Ошибка при копировании папки: {e}")
@@ -139,7 +143,7 @@ class view_model(QWidget):
         telegram_path = f'{inst_new}\\Telegram.exe'
         command = f"{telegram_path}"
         subprocess.Popen(command, shell=True)
-        time.sleep(3)
+        #time.sleep(3)
 
     def get_screen_resolution(self):
         root = tk.Tk()
@@ -174,9 +178,11 @@ class view_model(QWidget):
             try:
                 if os.path.exists(profile.item.inst):
                     shutil.rmtree(profile.item.inst)
+                    self.log_signal.emit(f"tdata '{profile.item.name}' успешно удалена.")
                     print(f"Inst '{profile.item.name}' успешно удален.")
                 if os.path.exists(profile.item.profile):
                     shutil.rmtree(profile.item.profile)
+                    self.log_signal.emit(f"Профиль '{profile.item.name}' успешно удален.")
                     print(f"Профиль '{profile.item.name}' успешно удален.")
             except Exception as e:
                 print(f"Ошибка при удалении профиля: {e}")
@@ -194,6 +200,7 @@ class view_model(QWidget):
                 if proc.info['name'] == process_name and fnmatch.fnmatch(os.path.normcase(proc.info['exe']), path_pattern):
                     # Завершаем процесс
                     proc.kill()
+                    self.log_signal.emit(f'Процесс {process_name} с PID {proc.info['pid']} был успешно завершен.')
                     print(f"Процесс {process_name} с PID {proc.info['pid']} был убит")
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as e:
                 # Игнорируем ошибки, если процесс уже не существует или недоступен
@@ -201,4 +208,3 @@ class view_model(QWidget):
 
     def switch_scale(self):
         self.scale = not self.scale
-

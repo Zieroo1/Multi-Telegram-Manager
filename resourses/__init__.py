@@ -1,3 +1,8 @@
+from .gui_img import *
+from PyQt5.QtGui import QPixmap
+
+icon = QPixmap('icon/icon25.png')
+
 title_label_style = """
                    QLabel {
                        color: #FFFFFF;
@@ -84,6 +89,8 @@ checkbox_style = """
     }
 """
 
+log_style = "background-color: #383838; color: #FFFFFF; border-radius: 10px; border: 2px solid #2D2D2D; font-size: 18px; line-height: 1;"
+
 def button_main_style(bg_color):
     return f"""
         QPushButton {{
@@ -118,4 +125,3 @@ def button_close_style(bg_color):
             background-color: #A92525;
         }}
     """
-

@@ -1,6 +1,6 @@
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QListWidgetItem
-from profile import profile
+from model.profile import profile
 
 
 class image_list_item(QListWidgetItem):

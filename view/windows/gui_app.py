@@ -1,9 +1,12 @@
+import base64
+
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget,
-                             QLabel, QFrame, QCheckBox)
+                             QLabel, QFrame, QCheckBox, QTextEdit)
 from PyQt5.QtCore import Qt, QPoint
-from drag_and_drop_widget import drag_and_drop_widget
-from action import view_model
-from style import title_label_style, profile_list_style, button_style_style, button_close_style, button_main_style, checkbox_style
+from view.widget.drag_and_drop_widget import drag_and_drop_widget
+from view_model.action import view_model
+from resourses import profile_list_style, button_style_style, button_close_style, button_main_style, \
+    checkbox_style, log_style, icon
 
 
 class MyApp(QWidget):
@@ -33,11 +36,26 @@ class MyApp(QWidget):
         title_layout.setContentsMargins(30, 0, 0, 0)  # Add left margin to move text from the edge
         title_layout.addStretch()
 
-        # Title text
-        self.title_label = QLabel("TG Starter")
-        self.title_label.setStyleSheet(title_label_style)
+        # HTML-разметка с изображением перед текстом
+        html_text = f'<div style = "padding: 5px"><a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley"><img src="data:image/png;base64,{icon}" style="height: 50px; width: auto; vertical-align:middle;"></a> <span style="font-size: 18px; color: #FFFFFF; font-family: Poppins; vertical-align:middle;">Multi-Telegram Manager</span></div>'
+
+        # Создаем QLabel с HTML-разметкой
+        self.title_label = QLabel()
+        self.title_label.setTextFormat(Qt.RichText)
+        self.title_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.title_label.setOpenExternalLinks(True)
+        self.title_label.setText(html_text)
+
+        # Выравниваем по центру
         self.title_label.setAlignment(Qt.AlignCenter)
 
+        # Добавляем элементы на header_layout
+        header_layout.addWidget(self.title_label)
+
+        # Устанавливаем header_layout как layout виджета
+        self.setLayout(header_layout)
+
+        # Добавляем элементы на header_layout
         header_layout.addWidget(self.title_bar)
         header_layout.addSpacing(10)  # Left spacer
         header_layout.addWidget(self.title_label)
@@ -89,11 +107,11 @@ class MyApp(QWidget):
         buttons_dragdrop_layout = QVBoxLayout()
 
         self.start_button = QPushButton('Start')
-        self.start_button.clicked.connect(self.async_launch)
+        self.start_button.clicked.connect(lambda: self.async_action(self.view_model.launch))
         self.stop_button = QPushButton('Kill all TG\'s')
         self.stop_button.clicked.connect(self.view_model.stop)
         self.delete_button = QPushButton('Delete')
-        self.delete_button.clicked.connect(self.view_model.delete_profile)
+        self.delete_button.clicked.connect(lambda: self.async_action(self.view_model.delete_profile))
         self.select_all_button = QPushButton('Select All')
         self.select_all_button.clicked.connect(self.view_model.select_all_action)
         self.unselect_all_button = QPushButton('Unselect All')
@@ -118,6 +136,12 @@ class MyApp(QWidget):
         self.drag_drop_widget = drag_and_drop_widget()
         buttons_dragdrop_layout.addWidget(self.drag_drop_widget)
         self.drag_drop_widget.files_added.connect(self.view_model.update)
+
+        self.log_window = QTextEdit()
+        self.log_window.setReadOnly(True)
+        self.log_window.setStyleSheet(log_style)
+        content_layout.addWidget(self.log_window)
+        self.view_model.log_signal.connect(self.update_log)
 
         content_layout.addLayout(buttons_dragdrop_layout)
 
@@ -147,5 +171,8 @@ class MyApp(QWidget):
         for i in self.view_model.profile_items:
             self.profile_list.addItem(i)
 
-    def async_launch(self):
-        self.view_model.start_worker(self.view_model.launch)
+    def async_action(self, task, *args):
+        self.view_model.start_worker(task, *args)
+
+    def update_log(self, message):
+        self.log_window.append(message)
