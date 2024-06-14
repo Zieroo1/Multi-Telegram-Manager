@@ -42,11 +42,8 @@ class view_model(QWidget):
 
     def create_profile_item(self):
         profile_items = []
-        for i, profile_name in enumerate(self.profiles, start=1):
-            unchecked_icon_path = os.path.join('../resourses/gui_img', 'tguncli.png')
-            checked_icon_path = os.path.join('../resourses/gui_img', 'tgcli.png')
-            icon_size = QSize(38, 38)
-            item = image_list_item(unchecked_icon_path, checked_icon_path, icon_size, profile_name)
+        for i, profile_name in enumerate(self.profiles):
+            item = image_list_item(profile_name)
             item.setData(Qt.UserRole, profile_name)
             item.setSizeHint(QSize(180, 43))
             item.setTextAlignment(Qt.AlignCenter)
@@ -96,6 +93,7 @@ class view_model(QWidget):
 
         # Проверяем, существует ли исходный файл
         if not os.path.isfile(source_file):
+            self.log_signal.emit("Telegram.exe не найден")
             print(f"Нет телеги")
             return
 

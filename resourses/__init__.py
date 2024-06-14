@@ -7,7 +7,7 @@ title_label_style = """
                        font-size: 16px;
                        font-family: Poppins;
                        font-size: 20px;
-                       font-weight: bold;
+                       padding: 5px 0px 0px 20px;
                    }
                """
 
@@ -19,7 +19,6 @@ profile_list_style = """
             QListWidget::item {
                 color: #FFFFFF;
                 background-color: #484848;
-                padding: 5px;
                 border: 1px solid #2D2D2D;
                 width: 180px;
                 height: 43px;
@@ -87,7 +86,14 @@ checkbox_style = """
     }
 """
 
-log_style = "background-color: #383838; color: #FFFFFF; border-radius: 10px; border: 2px solid #2D2D2D; font-size: 18px; line-height: 1;"
+log_style = """
+    QTextEdit {
+        background-color: #383838; 
+        color: #FFFFFF; border-radius: 
+        10px; border: 2px solid #2D2D2D; 
+        font-size: 18px; line-height: 1;
+    }
+"""
 
 def button_main_style(bg_color):
     return f"""
